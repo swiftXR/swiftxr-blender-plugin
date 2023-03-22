@@ -282,7 +282,7 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
         # Make request to SwiftXR API server
         if not site_id:
             state_create = requests.post(
-                "https://test-api.swiftxr.io/v1/sites/", headers=headers, json=create_data)
+                "https://api.swiftxr.io/v1/sites/", headers=headers, json=create_data)
         else:
             state_create = requests.patch("https://test-api.swiftxr.io/v1/sites/" +
                                           site_id, headers=headers, json=create_data)
@@ -302,7 +302,7 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
                 files = {'deploy': ('deploy.glb', data)}
 
             state_deploy = requests.post(
-                "https://test-api.swiftxr.io/v1/sites/deploy/" + site_id, headers=headers, files=files)
+                "https://api.swiftxr.io/v1/sites/deploy/" + site_id, headers=headers, files=files)
 
             if state_deploy.status_code == 200:
                 deploy_response = json.loads(state_deploy.text)["site"]
