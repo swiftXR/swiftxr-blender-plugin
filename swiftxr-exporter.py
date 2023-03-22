@@ -284,7 +284,7 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
             state_create = requests.post(
                 "https://api.swiftxr.io/v1/sites/", headers=headers, json=create_data)
         else:
-            state_create = requests.patch("https://test-api.swiftxr.io/v1/sites/" +
+            state_create = requests.patch("https://api.swiftxr.io/v1/sites/" +
                                           site_id, headers=headers, json=create_data)
 
         wm.progress_update(25)
