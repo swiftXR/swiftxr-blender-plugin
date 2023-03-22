@@ -218,9 +218,11 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
             self.layout.label(
                 text="API key not set. Please set your API key in the plugin preferences.")
             return
-
-        self.layout.label(
-            text="SwiftXR's pricing is based on the size of your exports. For each creation, you'll be charged 1 credit per 1MB of data. For updates, you'll be charged based on the difference between the old and new export sizes. Check out the SwiftXR Pricing page for more information")
+        
+        self.layout.label(text="Creation: 1 credit per 1MB of export size. Updates: MB Diff between the old and new export sizes.",
+                     icon='INFO',
+                     translate=False)
+        
         pass
 
 
