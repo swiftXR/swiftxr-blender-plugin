@@ -58,6 +58,7 @@ def save_export_config(var_name, data):
         scene[var_name] = swiftxr_data_block
 
     json_str = get_text_from_json(data)
+    swiftxr_data_block.clear()
     swiftxr_data_block.write(json_str)
 
 
@@ -142,8 +143,12 @@ class SwiftXRPreferences(bpy.types.AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
+
         layout.prop(self, "swiftxr_api_key")
 
+        layout.label(
+            text="The API key enables easy authorisation to use the SwiftXR Platform")
+        
         # Add a button to generate the API key
         layout.operator("swiftxr.generate_api_key")
 
@@ -209,6 +214,9 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
     )
 
     plugin_block_name = "swiftxr_block"
+    swiftxr_api_url = "http://localhost:3333/v1"
+
+    #SWF.EhOUP5yApYct5Q.Xbg6l8JUzEG9o1W3atZF2slP-Af1qjTbkKZppJ9_r0I
 
     def draw(self, context):
         swiftxr_api_key = get_api_key(__name__)
@@ -240,7 +248,7 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
 
         if not self.swiftxr_site_name:
             bpy.ops.swiftxr.popup(
-                'INVOKE_DEFAULT', message="Site Name cannot be left blank")
+                'INVOKE_DEFAULT', message="Project Name cannot be left blank")
             #self.report({'ERROR'}, "API Key cannot be empty")
             return {'CANCELLED'}
 
@@ -281,13 +289,36 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
 
         # Make request to SwiftXR API server
         if not site_id:
+            print("creating")
             state_create = requests.post(
-                "https://api.swiftxr.io/v1/sites/", headers=headers, json=create_data)
+                self.swiftxr_api_url + "/sites/", 
+                headers=headers, 
+                json=create_data)
         else:
-            state_create = requests.patch("https://api.swiftxr.io/v1/sites/" +
-                                          site_id, headers=headers, json=create_data)
+            print("updating")
+            state_create = requests.patch(
+                self.swiftxr_api_url + "/sites/" + site_id, 
+                headers=headers, 
+                json=create_data)
 
         wm.progress_update(25)
+
+        # In case the project has been deleted on the platform, but the ID is still present in the scene, we check for "site not found" and create based on the name
+
+        if state_create.status_code == 400 and site_id:
+            try:
+                message = json.loads(state_create.text)["error"]
+
+                if message == "site not found":
+                    state_create = requests.post(
+                        self.swiftxr_api_url + "/sites/",
+                        headers=headers,
+                        json=create_data)
+            except:
+                message = "Could not update project, kindly ocntact support or create a new blender scene"
+                bpy.ops.swiftxr.popup(
+                    'INVOKE_DEFAULT', message=message)
+                return {'CANCELLED'}
 
         if state_create.status_code == 200:
 
@@ -295,14 +326,16 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
 
             save_export_config(self.plugin_block_name, create_message)
 
-            site_id = create_message["site_id"]
+            site_id = create_message.get("site_id")
 
             with open(self.filepath, "rb") as f:
                 data = f.read()
                 files = {'deploy': ('deploy.glb', data)}
 
             state_deploy = requests.post(
-                "https://api.swiftxr.io/v1/sites/deploy/" + site_id, headers=headers, files=files)
+                self.swiftxr_api_url + "/sites/deploy/" + site_id, 
+                headers=headers, 
+                files=files)
 
             if state_deploy.status_code == 200:
                 deploy_response = json.loads(state_deploy.text)["site"]
@@ -312,7 +345,15 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
                 message = "Scene exported to SwiftXR successfully"
             else:
                 try:
-                    message = json.loads(state_deploy.text)["error"]
+                    error_message = json.loads(state_deploy.text)
+
+                    credits_error = error_message.get("error_credit")
+                    default_error = config.get("error")
+                    
+                    if credits_error: 
+                        message = credits_error
+                    else:
+                       message = default_error
                 except:
                     message = "An error occurred while exporting scene to SwiftXR"
         else:
