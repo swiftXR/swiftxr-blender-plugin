@@ -1,4 +1,11 @@
 
+import webbrowser
+import json
+import requests
+import bpy
+import time
+import re
+
 from bpy.props import (
     StringProperty,
     BoolProperty,
@@ -7,22 +14,16 @@ from bpy.props import (
 )
 from bpy_extras.io_utils import ExportHelper
 
-import threading
-import webbrowser
-import json
-import requests
-import bpy
-import time
-
 bl_info = {
     "name": "SwiftXR Exporter",
     "author": "SwiftXR",
     "version": (1, 0, 0),
     "blender": (2, 80, 0),
-    "location": "File > Import-Export",
+    "location": "File > Export",
     "description": "Export and Share blender scenes to the web, in 3D, AR or VR",
     "doc_url": "https://docs.swiftxr.io",
-    "category": "Export"
+    "category": "Import-Export",
+    "support": "COMMUNITY"
 }
 
 
@@ -45,6 +46,13 @@ def get_json_from_text(json_string):
 
 def get_text_from_json(json_main):
     return json.dumps(json_main)
+
+# Returns a safe text that can be used for a URL
+def get_safe_text_input(unsafe_text):
+    safe_text = re.sub(
+        r'[^\w\d_-]', '', unsafe_text.lower().replace(" ", "-"))
+    
+    return safe_text
 
 # Save the Export configuration, including SwiftXR Published project ID
 def save_export_config(var_name, data):
@@ -192,8 +200,9 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
         items=(('3D', "3D", "View in 3D on the Web"),
                ('AR', "3D & Augmented Reality (AR)",
                 "View in 3D on the Web and in AR"),
-               ('VR', "3D & Virtual Reality (VR)",
-                "View in 3D on the Web and in VR")
+                # VR Mode - Coming Soon
+                # ('VR', "3D & Virtual Reality (VR)",
+                # "View in 3D on the Web and in VR")
                ),
     )
 
@@ -213,10 +222,8 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
         max=10
     )
 
-    plugin_block_name = "swiftxr_block"
-    swiftxr_api_url = "http://localhost:3333/v1"
-
-    #SWF.EhOUP5yApYct5Q.Xbg6l8JUzEG9o1W3atZF2slP-Af1qjTbkKZppJ9_r0I
+    PLUGIN_BLOCK_NAME = "swiftxr_block"
+    SWIFTXR_API_URL = "https://api.swiftxr.io/v1"
 
     def draw(self, context):
         swiftxr_api_key = get_api_key(__name__)
@@ -227,9 +234,10 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
                 text="API key not set. Please set your API key in the plugin preferences.")
             return
         
-        self.layout.label(text="Creation: 1 credit per 1MB of export size. Updates: MB Diff between the old and new export sizes.",
-                     icon='INFO',
-                     translate=False)
+        self.layout.label(
+            text="Creation: 1 credit per 1MB of export size. Updates: MB Diff between the old and new export sizes.",
+            icon='INFO',
+            translate=False)
         
         pass
 
@@ -270,7 +278,7 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
         compress_image = self.image_compression != 0
 
         create_data = {
-            "site_name": self.swiftxr_site_name,
+            "site_name": get_safe_text_input(self.swiftxr_site_name),
             "config": {
                 "type": "model",
                 "logo_url": "",
@@ -283,21 +291,19 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
         }
 
         # Get previous Stored Config
-        config = get_export_config(self.plugin_block_name)
+        config = get_export_config(self.PLUGIN_BLOCK_NAME)
 
         site_id = config.get("site_id")
 
         # Make request to SwiftXR API server
         if not site_id:
-            print("creating")
             state_create = requests.post(
-                self.swiftxr_api_url + "/sites/", 
+                self.SWIFTXR_API_URL + "/sites/",
                 headers=headers, 
                 json=create_data)
         else:
-            print("updating")
             state_create = requests.patch(
-                self.swiftxr_api_url + "/sites/" + site_id, 
+                self.SWIFTXR_API_URL + "/sites/" + site_id,
                 headers=headers, 
                 json=create_data)
 
@@ -311,7 +317,7 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
 
                 if message == "site not found":
                     state_create = requests.post(
-                        self.swiftxr_api_url + "/sites/",
+                        self.SWIFTXR_API_URL + "/sites/",
                         headers=headers,
                         json=create_data)
             except:
@@ -324,7 +330,7 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
 
             create_message = json.loads(state_create.text)["site"]
 
-            save_export_config(self.plugin_block_name, create_message)
+            save_export_config(self.PLUGIN_BLOCK_NAME, create_message)
 
             site_id = create_message.get("site_id")
 
@@ -333,7 +339,7 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
                 files = {'deploy': ('deploy.glb', data)}
 
             state_deploy = requests.post(
-                self.swiftxr_api_url + "/sites/deploy/" + site_id, 
+                self.SWIFTXR_API_URL + "/sites/deploy/" + site_id,
                 headers=headers, 
                 files=files)
 
