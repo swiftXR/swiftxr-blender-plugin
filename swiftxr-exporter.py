@@ -21,7 +21,7 @@ bl_info = {
     "blender": (2, 80, 0),
     "location": "File > Export",
     "description": "Export and Share blender scenes to the web, in 3D, AR or VR",
-    "doc_url": "https://docs.swiftxr.io",
+    "doc_url": "https://docs.swiftxr.io/#/docs/blender-plugin",
     "category": "Import-Export",
     "support": "COMMUNITY"
 }
