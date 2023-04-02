@@ -1,0 +1,7 @@
+== Changelog ==
+
+= 1.0.0 =
+* Added initial Add-on release build files.
+
+= 1.0.1 =
+* Added Animation export preferences.

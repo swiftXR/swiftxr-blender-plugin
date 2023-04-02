@@ -17,7 +17,7 @@ from bpy_extras.io_utils import ExportHelper
 bl_info = {
     "name": "SwiftXR Exporter",
     "author": "SwiftXR",
-    "version": (1, 0, 0),
+    "version": (1, 0, 1),
     "blender": (2, 80, 0),
     "location": "File > Export",
     "description": "Export and Share blender scenes to the web, in 3D, AR or VR",
@@ -195,6 +195,12 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
         default=False,
     )
 
+    export_animations: BoolProperty(
+        name="Animations",
+        description="Exports active actions and tracks as glTF animations",
+        default=False,
+    )
+
     immersive_mode: EnumProperty(
         name="Mode",
         items=(('3D', "3D", "View in 3D on the Web"),
@@ -262,7 +268,7 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
 
         # Export scene or selected object as GLTF 2.0
         bpy.ops.export_scene.gltf(
-            filepath=self.filepath, check_existing=False, use_selection=self.use_selection, use_visible=self.use_visible, use_active_collection=self.use_active_collection)
+            filepath=self.filepath, check_existing=False, use_selection=self.use_selection, use_visible=self.use_visible, use_active_collection=self.use_active_collection, export_animations=self.export_animations)
 
         wm = bpy.context.window_manager
         wm.progress_begin(0, 100)
@@ -430,7 +436,9 @@ class SWIFTXR_PT_export_include(bpy.types.Panel):
 
         sublayout = layout.column(heading="Limit to")
         sublayout.prop(operator, "use_selection")
+        sublayout.prop(operator, "use_visible")
         sublayout.prop(operator, "use_active_collection")
+        sublayout.prop(operator, "export_animations")
 
 
 class SWIFTXR_PT_export_compression(bpy.types.Panel):
