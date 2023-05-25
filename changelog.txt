@@ -5,3 +5,6 @@
 
 = 1.0.1 =
 * Added Animation export preferences.
+
+= 1.0.2 =
+* Added Support for customizing background color and disabling auto-rotate.

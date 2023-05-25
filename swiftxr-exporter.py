@@ -10,14 +10,15 @@ from bpy.props import (
     StringProperty,
     BoolProperty,
     EnumProperty,
-    IntProperty
+    IntProperty,
+    FloatVectorProperty
 )
 from bpy_extras.io_utils import ExportHelper
 
 bl_info = {
     "name": "SwiftXR Exporter",
     "author": "SwiftXR",
-    "version": (1, 0, 1),
+    "version": (1, 0, 2),
     "blender": (2, 80, 0),
     "location": "File > Export",
     "description": "Export and Share blender scenes to the web, in 3D, AR or VR",
@@ -86,6 +87,18 @@ def get_export_config(var_name):
     except:
         return {}
 
+## Get color as string
+def serialize_background_color(color):
+
+    r, g, b = color
+    r_hex = format(int(r * 255), '02x')
+    g_hex = format(int(g * 255), '02x')
+    b_hex = format(int(b * 255), '02x')
+
+    # Create the hex color value by concatenating the components
+    hex_color = '#' + r_hex + g_hex + b_hex
+
+    return hex_color
 
 class SwiftXRPopup(bpy.types.Operator):
     """A simple popup"""
@@ -203,13 +216,35 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
 
     immersive_mode: EnumProperty(
         name="Mode",
-        items=(('3D', "3D", "View in 3D on the Web"),
-               ('AR', "3D & Augmented Reality (AR)",
+        items=(('3d', "3D", "View in 3D on the Web"),
+               ('model', "3D & Augmented Reality (AR)",
                 "View in 3D on the Web and in AR"),
                 # VR Mode - Coming Soon
-                # ('VR', "3D & Virtual Reality (VR)",
-                # "View in 3D on the Web and in VR")
+                ('vr', "3D & Virtual Reality (VR)",
+                "View in 3D on the Web and in VR")
                ),
+        default='model'
+    )
+
+    background_color: FloatVectorProperty(
+        name="Background Color",
+        subtype='COLOR',
+        default=(1.0, 1.0, 1.0),  # Default white color
+        min=0.0,
+        max=1.0
+    )
+
+    auto_rotate: BoolProperty(
+        name="Auto Rotate",
+        description="Enable automatic rotation of the model on the web",
+        default=True,
+    )
+
+    tooltip: StringProperty(
+        name="Button Tooltip",
+        description="Sets a trigger message to go into AR or VR",
+        default="View in my Space",
+        maxlen=255,
     )
 
     image_compression: IntProperty(
@@ -229,7 +264,7 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
     )
 
     PLUGIN_BLOCK_NAME = "swiftxr_block"
-    SWIFTXR_API_URL = "https://api.swiftxr.io/v1"
+    SWIFTXR_API_URL = "https://test-api.swiftxr.io/v1"
 
     def draw(self, context):
         swiftxr_api_key = get_api_key(__name__)
@@ -286,13 +321,16 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
         create_data = {
             "site_name": get_safe_text_input(self.swiftxr_site_name),
             "config": {
-                "type": "model",
+                "type": self.immersive_mode,
                 "logo_url": "",
                 "compress_model": compress_model,
                 "model_compression_level": self.model_compression,
                 "compress_image": compress_image,
                 "image_compression_level": self.image_compression,
-                "use_ar": use_ar
+                "use_ar": use_ar,
+                "tooltip": self.tooltip,
+                "background": serialize_background_color(self.background_color),
+                "auto_rotate": self.auto_rotate,
             }
         }
 
@@ -377,9 +415,15 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
         wm.progress_update(100)
         wm.progress_end()
 
-        bpy.ops.swiftxr.popup(
-            'INVOKE_DEFAULT', message=message)
-        self.report({'INFO'}, message)
+        try:
+            bpy.ops.swiftxr.popup(
+                'INVOKE_DEFAULT', message=message)
+            self.report({'INFO'}, message)
+        except:
+            message = "An error occurred while exporting scene to SwiftXR"
+            bpy.ops.swiftxr.popup(
+                'INVOKE_DEFAULT', message=message)
+            self.report({'INFO'}, message)
         return {'FINISHED'}
 
 
@@ -409,6 +453,9 @@ class SWIFTXR_PT_export_main(bpy.types.Panel):
         row.prop(operator, "swiftxr_site_name")
         row = layout.row(align=True)
         row.prop(operator, "immersive_mode")
+        row = layout.row(align=True)
+        row.prop(operator, "background_color")
+        
 
 
 class SWIFTXR_PT_export_include(bpy.types.Panel):
@@ -439,6 +486,8 @@ class SWIFTXR_PT_export_include(bpy.types.Panel):
         sublayout.prop(operator, "use_visible")
         sublayout.prop(operator, "use_active_collection")
         sublayout.prop(operator, "export_animations")
+        sublayout.prop(operator, "auto_rotate")
+        sublayout.prop(operator, "tooltip")
 
 
 class SWIFTXR_PT_export_compression(bpy.types.Panel):
