@@ -264,7 +264,7 @@ class SwiftXRExport(bpy.types.Operator, ExportHelper):
     )
 
     PLUGIN_BLOCK_NAME = "swiftxr_block"
-    SWIFTXR_API_URL = "https://test-api.swiftxr.io/v1"
+    SWIFTXR_API_URL = "https://api.swiftxr.io/v1"
 
     def draw(self, context):
         swiftxr_api_key = get_api_key(__name__)
