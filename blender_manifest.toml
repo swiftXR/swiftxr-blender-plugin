@@ -4,11 +4,11 @@ schema_version = "1.0.0"
 id = "swiftxr_3d_ar_vr_exporter"
 version = "1.0.3"
 name = "SwiftXR (3D/AR/VR) Exporter"
-tagline = "Export and Share blender scenes to the web, in 3D, Augmented Reality (AR) or Virtual Reality (VR)"
+tagline = "Export and Share blender scenes to the web, in 3D, AR or VR"
 maintainer = "SwiftXR <support@swiftxr.io>"
 type = "add-on"
 website = "https://guide.swiftxr.io/plugins/blender"
-tags = ["3D", "Augmented Reality", "AR", "Virtual Reality", "VR"]
+tags = ["Import-Export"]
 
 blender_version_min = "2.80.0"
 
