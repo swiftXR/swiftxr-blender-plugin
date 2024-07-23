@@ -1,4 +1,4 @@
-# swiftxr-blender-plugin
-SwiftXR Blender Plugin
+# SwiftXR Blender Plugin
+## Export and Share blender scenes to the web, in 3D, Augmented Reality (AR) or Virtual Reality (VR)
 
-- Read More here: https://guide.swiftxr.io/plugins/blender
+- Read more: https://guide.swiftxr.io/plugins/blender
