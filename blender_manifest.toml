@@ -1,0 +1,19 @@
+schema_version = "1.0.0"
+
+# Example of manifest file for a Blender extension
+id = "swiftxr_3d_ar_vr_exporter"
+version = "1.0.3"
+name = "SwiftXR (3D/AR/VR) Exporter"
+tagline = "Export and Share blender scenes to the web, in 3D, Augmented Reality (AR) or Virtual Reality (VR)"
+maintainer = "SwiftXR <support@swiftxr.io>"
+type = "add-on"
+website = "https://guide.swiftxr.io/plugins/blender"
+tags = ["3D", "Augmented Reality", "AR", "Virtual Reality", "VR"]
+
+blender_version_min = "2.80.0"
+
+# License conforming to https://spdx.org/licenses/ (use "SPDX: prefix)
+# https://docs.blender.org/manual/en/dev/advanced/extensions/licenses.html
+license = [
+  "SPDX:GPL-2.0-or-later",
+]
