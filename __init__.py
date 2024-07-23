@@ -16,13 +16,13 @@ from bpy.props import (
 from bpy_extras.io_utils import ExportHelper
 
 bl_info = {
-    "name": "SwiftXR Exporter",
+    "name": "SwiftXR (3D/AR/VR) Exporter",
     "author": "SwiftXR",
-    "version": (1, 0, 2),
+    "version": (1, 0, 3),
     "blender": (2, 80, 0),
     "location": "File > Export",
     "description": "Export and Share blender scenes to the web, in 3D, AR or VR",
-    "doc_url": "https://docs.swiftxr.io/#/docs/blender-plugin",
+    "doc_url": "https://guide.swiftxr.io/plugins/blender",
     "category": "Import-Export",
     "support": "COMMUNITY"
 }
